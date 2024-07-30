@@ -25,13 +25,19 @@ defmodule LiveviewPlayground do
       server: true,
       live_view: [signing_salt: "aaaaaaaa"],
       secret_key_base: String.duplicate("a", 64),
-      router: router
+      router: router,
+      pubsub_server: LiveviewPlayground.PubSub
     )
 
     Application.put_env(:liveview_playground, :router, router)
     Application.put_env(:liveview_playground, :scripts, scripts)
 
-    {:ok, _} = Supervisor.start_link([endpoint], strategy: :one_for_one)
+    children = [
+      {Phoenix.PubSub, name: LiveviewPlayground.PubSub},
+      endpoint
+    ]
+
+    {:ok, _} = Supervisor.start_link(children, strategy: :one_for_one)
     Process.sleep(:infinity)
   end
 end
